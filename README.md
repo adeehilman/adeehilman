@@ -10,9 +10,7 @@
 
 <div align="center">
  
-🌱 I’m currently learning Django Rest Framework
-
-💬 Ask me about Laravel, Django, UiPath, PostgreSQL... or anything [here](https://github.com/adeehilman/readme/issues)**
+🌱 I’m currently learning **Django Rest Framework** & **React JS**
 
 ⚡ Fun fact I love exploring the intersection of web development and automation to build smart, efficient solutions!
  </div>
