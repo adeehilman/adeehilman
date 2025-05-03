@@ -33,7 +33,9 @@
 <br/>
 <div align="center">
     <img src="https://skillicons.dev/icons?i=php,laravel,bootstrap,html,css,vscode,github,tailwind,git,nginx" />
-    <img src="https://skillicons.dev/icons?i=nodejs,python,javascript,firebase,mysql,postgres,django" /><br>
+    <img src="https://skillicons.dev/icons?i=nodejs,python,javascript,firebase,mysql,postgres,django" />
+    <img src="https://img.shields.io/badge/UiPath-FA4616.svg?style=for-the-badge&logo=UiPath&logoColor=white" /><br>
+    
 </div>
 
 <br/>
