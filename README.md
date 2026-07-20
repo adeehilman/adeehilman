@@ -10,7 +10,7 @@
 
 <div align="center">
  
-🌱 I’m currently learning **Django Rest Framework** & **React JS**
+🌱 I’m currently learning **VB, C#, UiPath** & **.NET**
 
 ⚡ Fun fact I love exploring the intersection of web development and automation to build smart, efficient solutions!
  </div>
