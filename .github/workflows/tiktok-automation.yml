@@ -1,0 +1,135 @@
+name: TikTok Automation
+
+# Manual by default. The weekly schedule only ever runs a dry-run: it exercises
+# the session and the selectors so you find out they rotted on a Monday morning
+# rather than mid-send. A real send needs someone to press the button and set
+# allow_send=true, which is the point.
+on:
+  workflow_dispatch:
+    inputs:
+      command:
+        description: "What to run"
+        type: choice
+        default: send
+        options: [check, scrape, send, status]
+      allow_send:
+        description: "Actually send messages (leave false to rehearse)"
+        type: boolean
+        default: false
+      max_messages:
+        description: "Hard cap on messages this run"
+        default: "5"
+      message_mode:
+        description: "emoji types a character; sticker picks from the panel"
+        type: choice
+        default: emoji
+        options: [emoji, sticker]
+      sticker_emoji:
+        description: "Emoji to send when message_mode=emoji"
+        default: "🎉"
+      only:
+        description: "Space-separated handles to restrict the run to (optional)"
+        default: ""
+
+  schedule:
+    # Mondays 02:00 UTC — dry-run health check only.
+    - cron: "0 2 * * 1"
+
+concurrency:
+  # Two of these running at once would blow past the per-run cap.
+  group: tiktok-automation
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: tiktok-automation
+
+    env:
+      TIKTOK_USERNAME: ${{ vars.TIKTOK_USERNAME }}
+      TIKTOK_SESSION_B64: ${{ secrets.TIKTOK_SESSION_B64 }}
+      # inputs.* is empty on a schedule run, so every default here is the safe one.
+      DRY_RUN: ${{ inputs.allow_send == true && 'false' || 'true' }}
+      ALLOW_SEND: ${{ inputs.allow_send == true && 'true' || 'false' }}
+      MAX_MESSAGES: ${{ inputs.max_messages || '5' }}
+      MESSAGE_MODE: ${{ inputs.message_mode || 'emoji' }}
+      STICKER_EMOJI: ${{ inputs.sticker_emoji || '🎉' }}
+      MIN_DELAY_SECONDS: "45"
+      MAX_DELAY_SECONDS: "120"
+      RESEND_COOLDOWN_DAYS: "30"
+      HEADLESS: "true"
+      PYTHONPATH: src
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: tiktok-automation/requirements*.txt
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+
+      - name: Unit tests
+        run: python -m pytest
+
+      - name: Fail fast without a session
+        if: env.TIKTOK_SESSION_B64 == ''
+        run: |
+          echo "::error::TIKTOK_SESSION_B64 is not set. Run scripts/capture_session.py" \
+               "locally, then: python -m tiktok_bot encode-session > session.txt and paste" \
+               "it into the repository secret."
+          exit 1
+
+      - name: Install Chromium
+        run: python -m playwright install --with-deps chromium
+
+      # The sent-log is what enforces the resend cooldown across runs, so it has
+      # to outlive the runner. restore-keys makes each run pick up the newest
+      # previous cache even though the key itself is unique per run.
+      - name: Restore sent-log
+        id: sent-log
+        uses: actions/cache/restore@v4
+        with:
+          path: tiktok-automation/state
+          key: tiktok-sent-log-${{ github.run_id }}
+          restore-keys: tiktok-sent-log-
+
+      - name: Run
+        run: |
+          set -euo pipefail
+          COMMAND="${{ inputs.command || 'send' }}"
+          ONLY="${{ inputs.only }}"
+          if [ "$COMMAND" = "send" ] && [ -n "$ONLY" ]; then
+            python -m tiktok_bot send --only $ONLY
+          else
+            python -m tiktok_bot "$COMMAND"
+          fi
+
+      - name: Save sent-log
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: tiktok-automation/state
+          key: tiktok-sent-log-${{ github.run_id }}
+
+      - name: Upload run output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tiktok-run-${{ github.run_id }}
+          path: |
+            tiktok-automation/state/
+            tiktok-automation/out/
+          if-no-files-found: ignore
+          retention-days: 14

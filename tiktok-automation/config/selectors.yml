@@ -1,0 +1,62 @@
+# TikTok ships its web UI without a stable public contract: these selectors
+# WILL rot. When a run fails with "selector not found", open the page in a real
+# browser, inspect the element, and update the entry here — no Python changes
+# needed.
+#
+# Every value may be a single selector or a list; the first one that resolves
+# wins, so keep a fallback around when you find one.
+
+login:
+  # Presence of this element is how the bot decides the session is still valid.
+  logged_in_marker:
+    - '[data-e2e="profile-icon"]'
+    - '[data-e2e="nav-profile"]'
+  login_button:
+    - '[data-e2e="top-login-button"]'
+
+profile:
+  follow_button:
+    - '[data-e2e="follow-button"]'
+  message_button:
+    - '[data-e2e="message-button"]'
+  # Text shown on the follow button when *you* already follow the account.
+  # Matched case-insensitively against the button's text content.
+  following_labels:
+    - 'following'
+    - 'friends'
+    - 'mengikuti'
+    - 'teman'
+
+following_list:
+  tab_button:
+    - '[data-e2e="following-count"]'
+    - '[data-e2e="following"]'
+  modal:
+    - '[data-e2e="follow-info-popup"]'
+    - 'div[role="dialog"]'
+  user_item:
+    - '[data-e2e="user-card"]'
+    - 'li[class*="DivUserContainer"]'
+  user_link: 'a[href^="/@"]'
+  nickname:
+    - '[data-e2e="user-card-nickname"]'
+    - 'p'
+
+messaging:
+  chat_input:
+    - '[data-e2e="message-input-area"] div[contenteditable="true"]'
+    - 'div[contenteditable="true"][role="textbox"]'
+  send_button:
+    - '[data-e2e="message-send"]'
+  sticker_toggle:
+    - '[data-e2e="emoji-entrance"]'
+    - '[data-e2e="sticker-entrance"]'
+  sticker_panel:
+    - '[data-e2e="emoji-panel"]'
+    - '[data-e2e="sticker-panel"]'
+  sticker_item:
+    - '[data-e2e="emoji-item"]'
+    - '[data-e2e="sticker-item"]'
+  # Last message bubble in the thread, used to confirm the send landed.
+  sent_bubble:
+    - '[data-e2e="chat-item"]'

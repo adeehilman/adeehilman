@@ -1,0 +1,14 @@
+# Never commit a real TikTok session — it is equivalent to your password.
+storage_state.json
+*.session.json
+.env
+
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+
+state/
+logs/
+out/

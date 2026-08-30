@@ -1,0 +1,3 @@
+# One TikTok handle per line, without the "@". These accounts are never
+# messaged, even if they show up in your following list.
+# Lines starting with # are ignored.
